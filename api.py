@@ -5,6 +5,8 @@ from db import Database
 app = Flask(__name__)
 db = Database()
 
+PORT = 1014
+
 
 @app.route('/', methods=['GET'])
 def get_members():
@@ -84,4 +86,4 @@ def assign_task():
 
 
 def runner():
-    app.run()
+    app.run('0.0.0.0', port=PORT)
