@@ -39,7 +39,18 @@ class Database:
         conn.commit()
         conn.close()
 
-    def fetch_members(self, name: str):
+    def fetch_members(self):
+        conn, cur = connector()
+        cur.execute("""SELECT user, r.role
+                        FROM members
+                        INNER JOIN roles r on r.role_id = members.role
+                        """)
+        members = cur.fetchall()
+        cur.close()
+        conn.close()
+        return members
+
+    def fetch_member(self, name: str):
         conn, cur = connector()
         cur.execute("""SELECT user, r.role
                         FROM members
@@ -105,3 +116,96 @@ class Database:
         cur.close()
         conn.close()
         return roles
+
+    # for api access, mostly POST methods
+    def add_member(self, user, role):
+        conn, cur = connector()
+        try:
+            user_id = cur.execute("SELECT id FROM members WHERE user=?", (user,)).fetchone()[0]
+        except TypeError:
+            user_id = None
+        try:
+            role_id = cur.execute("SELECT role_id FROM roles WHERE role=?", (role,)).fetchone()[0]
+        except TypeError:
+            role_id = None
+
+        if role_id is not None and user_id is None:
+            try:
+                cur.execute("""INSERT INTO members (user, role)
+                                VALUES (?, ?)""",
+                            (user, role_id, ))
+                conn.commit()
+                conn.close()
+            except Exception:
+                return 1
+            return 0
+        else:
+            return 1
+
+    def add_role(self, role):
+        conn, cur = connector()
+        try:
+            role_id = cur.execute("SELECT role_id FROM roles WHERE role=?", (role,)).fetchone()[0]
+        except TypeError:
+            role_id = None
+
+        if role_id is None:
+            try:
+                cur.execute("""INSERT INTO roles (role)
+                                VALUES (?)""",
+                            (role, ))
+                conn.commit()
+                conn.close()
+            except Exception:
+                return 1
+            return 0
+        return 1
+
+    def add_task(self, task, due_date):
+        conn, cur = connector()
+        try:
+            task_id = cur.execute("SELECT task_id FROM tasks WHERE task_desc=?", (task,)).fetchone()[0]
+        except TypeError:
+            task_id = None
+
+        if task_id is None:
+            try:
+                cur.execute("""INSERT INTO tasks (task_desc, due_date)
+                                VALUES (?, ?)""",
+                            (task, due_date, ))
+                conn.commit()
+                conn.close()
+            except Exception:
+                return 1
+
+            return 0
+        return 1
+
+    def assign_task(self, user, task):
+        conn, cur = connector()
+        try:
+            user_id = cur.execute("SELECT id FROM members WHERE user=?", (user,)).fetchone()[0]
+        except TypeError:
+            user_id = None
+        try:
+            task_id = cur.execute("SELECT task_id FROM tasks WHERE task_desc=?", (task,)).fetchone()[0]
+        except TypeError:
+            task_id = None
+
+        if task_id is not None and user_id is not None:
+            try:
+                cur.execute("""INSERT INTO task_user (user_id, task_id)
+                                VALUES (?, ?)""",
+                            (user_id, task_id))
+                conn.commit()
+                conn.close()
+            except Exception:
+                return 1
+            return 0
+        elif task_id is None and user_id is not None:
+            return 2
+        elif task_id is not None and user_id is None:
+            return 3
+        elif task_id is None and user_id is None:
+            return 4
+        return 1

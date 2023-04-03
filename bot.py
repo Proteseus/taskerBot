@@ -23,7 +23,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
 
 async def members(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     members_ = ""
-    for member in task_db.fetch_members(update.effective_user.first_name):
+    for member in task_db.fetch_members():
         members_ += f"Name: {member[0]} - Role: {member[1]}\n"
     await update.message.reply_text(members_)
 
@@ -56,7 +56,9 @@ app.add_handler(CommandHandler("tasks", tasks))
 app.add_handler(CommandHandler("tasks_assigned", tasks_assigned))
 app.add_handler(CommandHandler("user_tasks", user_tasks))
 
-# app.add_handler(CommandHandler("membership", check_membership))
-
-app.run_polling()
-
+# async def runner():
+#
+#     await app.initialize()
+#     await app.start()
+#     await app.updater.start_polling()
+# app.run_polling()
