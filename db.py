@@ -55,7 +55,7 @@ class Database:
         cur.execute("""SELECT user, r.role
                         FROM members
                         INNER JOIN roles r on r.role_id = members.role
-                        WHERE user=?""", (name, ))
+                        WHERE user=?""", (name,))
         members = cur.fetchall()
         cur.close()
         conn.close()
@@ -72,11 +72,12 @@ class Database:
     def fetch_task_assigned(self):
         conn, cur = connector()
         cur.execute("""select
-                          id,
+                          tasks.task_id,
                           user,
                           roles.role,
                           tasks.task_desc,
-                          tasks.due_date
+                          tasks.due_date,
+                          complete
                         from
                           members
                           inner join roles ON roles.role_id = members.role
@@ -103,7 +104,7 @@ class Database:
                             join tasks on tasks.task_id = task_user.task_id
                         WHERE 
                             user=?
-                """, (name, ))
+                """, (name,))
         task = cur.fetchall()
         cur.close()
         conn.close()
@@ -116,6 +117,13 @@ class Database:
         cur.close()
         conn.close()
         return roles
+
+    def task_completed(self, task_id):
+        conn, cur = connector()
+        cur.execute("""UPDATE tasks SET complete=1 WHERE task_id=?""", (task_id,))
+        conn.commit()
+        cur.close()
+        conn.close()
 
     # for api access, mostly POST methods
     def add_member(self, user, role):
@@ -133,7 +141,7 @@ class Database:
             try:
                 cur.execute("""INSERT INTO members (user, role)
                                 VALUES (?, ?)""",
-                            (user, role_id, ))
+                            (user, role_id,))
                 conn.commit()
                 conn.close()
             except Exception:
@@ -153,7 +161,7 @@ class Database:
             try:
                 cur.execute("""INSERT INTO roles (role)
                                 VALUES (?)""",
-                            (role, ))
+                            (role,))
                 conn.commit()
                 conn.close()
             except Exception:
@@ -172,7 +180,7 @@ class Database:
             try:
                 cur.execute("""INSERT INTO tasks (task_desc, due_date)
                                 VALUES (?, ?)""",
-                            (task, due_date, ))
+                            (task, due_date,))
                 conn.commit()
                 conn.close()
             except Exception:
