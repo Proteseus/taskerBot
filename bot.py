@@ -71,7 +71,7 @@ async def user_tasks(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None
     await update.message.reply_text(tasks_)
 
 
-app = ApplicationBuilder().token("5397641039:AAHyu2-qrogDJmG-eygCWHWBbzVW_cdxTkU").build()
+app = ApplicationBuilder().token("TOKEN").build()
 
 app.add_handler(CommandHandler("start", start))
 app.add_handler(CommandHandler("members", members))
